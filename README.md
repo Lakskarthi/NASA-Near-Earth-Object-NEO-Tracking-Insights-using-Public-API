@@ -25,6 +25,77 @@ Great beginner project for science + coding lovers
 GitHub: @Lakskarthi
 
 
+
+!pip install requests
+API_KEY="HIpHooCJcd7KVx1nbBGQCIIXH1PdVTly3eZkFToR"
+import requests
+url = f"https://api.nasa.gov/neo/rest/v1/feed?start_date=2024-01-01&end_date=2024-01-08&api_key={API_KEY}"
+response = requests.get(url)
+response
+
+data = response.json()
+data
+
+asteriods_data=[]
+target = 10000
+url= f"https://api.nasa.gov/neo/rest/v1/feed?start_date=2024-01-01&end_date=2024-01-08&api_key={API_KEY}"
+
+response=requests.get(url)
+data=response.json()
+details=data['near_earth_objects']
+while len(asteriods_data) < target:
+    for date,ast_details in details.items():
+        for ast in ast_details:
+            asteriods_data.append(dict(
+                id=ast['id'],
+                name=ast['name'],
+                magnitude=ast['absolute_magnitude_h'],
+                dia_min=ast['estimated_diameter']['kilometers']['estimated_diameter_min'],
+                dia_max=ast['estimated_diameter']['kilometers']['estimated_diameter_max'],
+                hazardous=ast['is_potentially_hazardous_asteroid']
+                
+            ))          
+            if len(asteriods_data)==target:
+                break
+        if len(asteriods_data)==target:
+                break
+        url=data['links']['next']
+
+asteriods_data=[]
+target = 10000
+url= f"https://api.nasa.gov/neo/rest/v1/feed?start_date=2024-01-01&end_date=2024-01-08&api_key={API_KEY}"
+
+response=requests.get(url)
+data=response.json()
+details=data['near_earth_objects']
+while len(asteriods_data) < target:
+    for date, ast_details in details.items():
+        for ast in ast_details:
+            if 'close_approach_data' in ast and ast['close_approach_data']:
+                approach_data = ast['close_approach_data'][0]
+
+                asteriods_data.append(dict(
+                    neo_id = ast['neo_reference_id'],
+                    close_approach_data = approach_data['close_approach_date_full'],
+                    epoch_close_date = approach_data['epoch_date_close_approach'],
+                    velocity = approach_data['relative_velocity']['kilometers_per_second'],
+                    distance = approach_data['miss_distance']['kilometers'],
+                    astronomical_AU = approach_data['miss_distance']['astronomical'],
+                    lunar = approach_data['miss_distance']['lunar'],
+                    Orbit = approach_data['orbiting_body']
+                ))
+
+            if len(asteriods_data) == target:
+                break
+        if len(asteriods_data)==target:
+            break
+        url=data['links']['next']
+
+        import pandas as pd
+import pymysql
+pd.DataFrame(asteriods_data).to_csv("asteroids_data.csv", index=False)
+print("Data saved to asteroids_data.csv")
+
 import streamlit as st
 import pandas as pd
 import pymysql
@@ -35,6 +106,28 @@ st.title("NASA PROJECT")
 # Database connection (if needed)
 conn = pymysql.connect(host='localhost', user='root', password='laks', database='nasa')
 cur = conn.cursor()
+cur.execute("""CREATE TABLE Asteroids (id INT,
+        name VARCHAR(255),
+        magnitude FLOAT,
+        dia_min FLOAT,
+        dia_max FLOAT,
+        hazardous BOOLEAN
+    )
+""")
+
+
+
+cur.execute("""
+    CREATE TABLE Close_Approaches (
+        id INT,
+        close_approach_date DATE,
+        epoch_close_date DATETIME,
+        velocity_km_s FLOAT,
+        miss_distance_km FLOAT,
+        miss_distance_lunar FLOAT,
+        orbiting_body VARCHAR(50)
+    )
+""")
 
 # Load CSV
 df = pd.read_csv("asteroids_data.csv")
