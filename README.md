@@ -13,7 +13,7 @@ Python – to write the code
 Requests – to get data from the internet
 Pandas / Matplotlib (optional) – to show data in tables or charts
 
-git clone https://github.com/yourusername/nasa-neo-tracker.git
+git clone https://github.com/lakskarthi/nasa-neo-tracker.git
 cd nasa-neo-tracker
 
 #Why this is so cool
